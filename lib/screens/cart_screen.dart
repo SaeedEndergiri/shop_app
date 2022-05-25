@@ -5,8 +5,13 @@ import '../providers/cart.dart' show Cart;
 import '/widgets/cart_item.dart';
 import '../providers/orders.dart';
 
-class CartScreen extends StatelessWidget {
+class CartScreen extends StatefulWidget {
   static const routeName = '/cart';
+  @override
+  State<CartScreen> createState() => _CartScreenState();
+}
+
+class _CartScreenState extends State<CartScreen> {
   @override
   Widget build(BuildContext context) {
     final cart = Provider.of<Cart>(context);
@@ -41,19 +46,7 @@ class CartScreen extends StatelessWidget {
                     ),
                     backgroundColor: Theme.of(context).colorScheme.primary,
                   ),
-                  TextButton(
-                    onPressed: () {
-                      Provider.of<Orders>(context, listen: false).addOrder(
-                        cart.items.values.toList(),
-                        cart.totalAmount,
-                      );
-                      cart.clear();
-                    },
-                    style: TextButton.styleFrom(
-                      primary: Theme.of(context).colorScheme.primary,
-                    ),
-                    child: const Text('ORDER NOW'),
-                  ),
+                  OrderButton(cart: cart),
                 ],
               ),
             ),
@@ -75,6 +68,71 @@ class CartScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class OrderButton extends StatefulWidget {
+  const OrderButton({Key? key, required this.cart}) : super(key: key);
+  final Cart cart;
+
+  @override
+  State<OrderButton> createState() => _OrderButtonState();
+}
+
+class _OrderButtonState extends State<OrderButton> {
+  var _isLoading = false;
+
+  Future<void> placeOrder(context, cart) async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      await Provider.of<Orders>(context, listen: false).addOrder(
+        cart.items.values.toList(),
+        cart.totalAmount,
+      );
+    } catch (error) {
+      await showDialog<Null>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('An Error occurred!'),
+          content: const Text(
+            'Something went wrong.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+              },
+              child: const Text('Okay'),
+            )
+          ],
+        ),
+      );
+    }
+    setState(() {
+      _isLoading = false;
+    });
+    cart.clear();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: (widget.cart.itemCount <= 0 || _isLoading)
+          ? null
+          : () {
+              placeOrder(context, widget.cart);
+            },
+      style: TextButton.styleFrom(
+        primary: Theme.of(context).colorScheme.primary,
+      ),
+      child: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : const Text('ORDER NOW'),
     );
   }
 }
