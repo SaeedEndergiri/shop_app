@@ -38,6 +38,30 @@ class CartItem extends StatelessWidget {
         ),
       ),
       direction: DismissDirection.endToStart,
+      confirmDismiss: (direction) {
+        return showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Are you sure?'),
+            content:
+                const Text('Do you want to remove the item from the cart?'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop(false);
+                },
+                child: const Text('No'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop(true);
+                },
+                child: const Text('Yes'),
+              ),
+            ],
+          ),
+        );
+      },
       onDismissed: (direction) {
         Provider.of<Cart>(
           context,
@@ -55,7 +79,8 @@ class CartItem extends StatelessWidget {
             leading: CircleAvatar(
               child: Padding(
                 padding: const EdgeInsets.all(5),
-                child: FittedBox(child: Text('\$${(price).toStringAsFixed(2)}')),
+                child:
+                    FittedBox(child: Text('\$${(price).toStringAsFixed(2)}')),
               ),
             ),
             title: Text(title),
@@ -78,7 +103,37 @@ class CartItem extends StatelessWidget {
                     Text('$quantity x'),
                     IconButton(
                       onPressed: () {
-                        cart.decreaseQuantity(productId);
+                        bool didConfirm = false;
+                        quantity < 2
+                            ? showDialog(
+                                context: context,
+                                builder: (ctx) {
+                                  return AlertDialog(
+                                    title: const Text('Are you sure?'),
+                                    content: const Text(
+                                        'Do you want to remove the item from the cart?'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(ctx).pop(false);
+                                        },
+                                        child: const Text('No'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(ctx).pop(true);
+                                        },
+                                        child: const Text('Yes'),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ).then((value) {
+                                if (value) {
+                                  cart.decreaseQuantity(productId);
+                                }
+                              })
+                            : cart.decreaseQuantity(productId);
                       },
                       icon: const Icon(
                         Icons.remove_circle_outline,
