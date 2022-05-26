@@ -92,6 +92,7 @@ class _OrderButtonState extends State<OrderButton> {
         cart.items.values.toList(),
         cart.totalAmount,
       );
+      cart.clear();
     } catch (error) {
       await showDialog<Null>(
         context: context,
@@ -114,7 +115,6 @@ class _OrderButtonState extends State<OrderButton> {
     setState(() {
       _isLoading = false;
     });
-    cart.clear();
   }
 
   @override
